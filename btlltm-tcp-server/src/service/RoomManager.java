@@ -6,7 +6,10 @@
 package service;
 
 import helper.RandomString;
+import model.ProductModel;
+import run.ServerRun;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -59,5 +62,36 @@ public class RoomManager {
 
     public ArrayList<Room> getRooms() {
         return rooms;
+    }
+    
+    // Các phương thức mới để hỗ trợ quản lý sản phẩm
+
+    public ProductModel getRandomProductForRoom() {
+        return ServerRun.productManager.getRandomProduct();
+    }
+
+    public void assignProductToRoom(Room room) {
+        ProductModel product = getRandomProductForRoom();
+        room.setCurrentProduct(product);
+    }
+
+    public List<ProductModel> getAllProducts() {
+        return ServerRun.productManager.getAllProducts();
+    }
+
+    public ProductModel getProductById(int id) {
+        return ServerRun.productManager.getProduct(id);
+    }
+
+    public void addNewProduct(ProductModel product) {
+        ServerRun.productManager.addProduct(product);
+    }
+
+    public void updateProduct(ProductModel product) {
+        ServerRun.productManager.updateProduct(product);
+    }
+
+    public void removeProduct(int productId) {
+        ServerRun.productManager.removeProduct(productId);
     }
 }

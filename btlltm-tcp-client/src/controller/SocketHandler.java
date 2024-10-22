@@ -10,6 +10,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import run.ClientRun;
 
 public class SocketHandler {
@@ -118,6 +119,15 @@ public class SocketHandler {
                     case "START_GAME":
                         onReceiveStartGame(received);
                         break; 
+                    case "NEXT_ROUND":
+                        onReceiveNextRound(received);
+                        break;
+                    case "ROUND_RESULT":
+                        onReceiveRoundResult(received);
+                        break;
+                    case "GAME_OVER":
+                        onReceiveGameOver(received);
+                        break;
                     case "RESULT_GAME":
                         onReceiveResultGame(received);
                         break;
@@ -216,28 +226,17 @@ public class SocketHandler {
     public void startGame (String userInvited) { 
         sendData("START_GAME;" + loginUser + ";" + userInvited + ";" + roomIdPresent);
     }
-    
-    public void submitResult (String competitor) { 
-        String result1 = ClientRun.gameView.getSelectedButton1();
-        String result2 = ClientRun.gameView.getSelectedButton2();
-        String result3 = ClientRun.gameView.getSelectedButton3();
-        String result4 = ClientRun.gameView.getSelectedButton4();
-        if (result1 == null || result2 == null || result3 == null || result4 == null) {
-            ClientRun.gameView.showMessage("Don't leave blank!");
+        
+    public void submitResult(String competitor) { 
+        String guess = ClientRun.gameView.getGuessInput();
+        if (guess.isEmpty()) {
+            ClientRun.gameView.showMessage("Vui lòng nhập giá dự đoán!");
         } else {
             ClientRun.gameView.pauseTime();
-            // Handle calculate time
-            String[] splitted = ClientRun.gameView.pbgTimer.getString().split(":");
-            String countDownTime = splitted[1];
-            int time = 30 - Integer.parseInt(countDownTime);
-            
-            String data = ClientRun.gameView.getA1() + ";" + ClientRun.gameView.getB1() + ";" + result1 + ";"
-                        + ClientRun.gameView.getA2() + ";" + ClientRun.gameView.getB2() + ";" + result2 + ";"
-                        + ClientRun.gameView.getA3() + ";" + ClientRun.gameView.getB3() + ";" + result3 + ";"
-                        + ClientRun.gameView.getA4() + ";" + ClientRun.gameView.getB4() + ";" + result4 + ";"
-                        + time;
-            
-            sendData("SUBMIT_RESULT;" + loginUser + ";" + competitor + ";" + roomIdPresent + ";" + data);
+            int remainingTime = ClientRun.gameView.getRemainingTime();
+            int elapsedTime = 30 - remainingTime; // Giả sử thời gian ban đầu là 30 giây
+
+            sendData("SUBMIT_RESULT;" + loginUser + ";" + competitor + ";" + roomIdPresent + ";" + guess + ";" + elapsedTime);
             ClientRun.gameView.afterSubmit();
         }
     }
@@ -300,7 +299,7 @@ public class SocketHandler {
             JOptionPane.showMessageDialog(ClientRun.registerView, failedMsg, "Lỗi", JOptionPane.ERROR_MESSAGE);
 
         } else if (status.equals("success")) {
-            JOptionPane.showMessageDialog(ClientRun.registerView, "Register account successfully! Please login!");
+            JOptionPane.showMessageDialog(ClientRun.registerView, "Đăng ký thành công! Hãy đăng nhập!");
             // chuyển scene
             ClientRun.closeScene(ClientRun.SceneName.REGISTER);
             ClientRun.openScene(ClientRun.SceneName.LOGIN);
@@ -380,7 +379,7 @@ public class SocketHandler {
         if (status.equals("success")) {
             String userHost = splitted[2];
             String userInvited = splitted[3];
-            if (JOptionPane.showConfirmDialog(ClientRun.homeView, userHost + " want to chat with you?", "Chat?", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_NO_OPTION){
+            if (JOptionPane.showConfirmDialog(ClientRun.homeView, userHost + " muốn chat với bạn?", "Chat?", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_NO_OPTION){
                 ClientRun.openScene(ClientRun.SceneName.MESSAGEVIEW);
                 ClientRun.messageView.setInfoUserChat(userHost);
                 sendData("ACCEPT_MESSAGE;" + userHost + ";" + userInvited);
@@ -456,7 +455,7 @@ public class SocketHandler {
             String userHost = splitted[2];
             String userInvited = splitted[3];
             String roomId = splitted[4];
-            if (JOptionPane.showConfirmDialog(ClientRun.homeView, userHost + " want to play game with you?", "Game?", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_NO_OPTION){
+            if (JOptionPane.showConfirmDialog(ClientRun.homeView, userHost + " muốn chơi game cùng bạn?", "Game?", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_NO_OPTION){
                 ClientRun.openScene(ClientRun.SceneName.GAMEVIEW);
                 ClientRun.gameView.setInfoPlayer(userHost);
                 roomIdPresent = roomId;
@@ -492,7 +491,7 @@ public class SocketHandler {
             String userHost = splitted[2];
             String userInvited = splitted[3];
                 
-            JOptionPane.showMessageDialog(ClientRun.homeView, userInvited + " don't want to play with you!");
+            JOptionPane.showMessageDialog(ClientRun.homeView, userInvited + " không muốn chơi game cùng bạn!");
         }
     }
     
@@ -519,44 +518,79 @@ public class SocketHandler {
     }
     
     private void onReceiveStartGame(String received) {
-        // get status from data
         String[] splitted = received.split(";");
         String status = splitted[1];
 
         if (status.equals("success")) {
-            String a1 = splitted[3];
-            String b1 = splitted[4];
-            String answer1a = splitted[5];
-            String answer1b = splitted[6];
-            String answer1c = splitted[7];
-            String answer1d = splitted[8];
-            ClientRun.gameView.setQuestion1(a1, b1, answer1a, answer1b, answer1c, answer1d);
+            String roomId = splitted[2];
+            String productName = splitted[3];
+            String imagePath = splitted[4];
+//            int roundGame = Integer.parseInt(splitted[5]);
             
-            String a2 = splitted[9];
-            String b2 = splitted[10];
-            String answer2a = splitted[11];
-            String answer2b = splitted[12];
-            String answer2c = splitted[13];
-            String answer2d = splitted[14];
-            ClientRun.gameView.setQuestion2(a2, b2, answer2a, answer2b, answer2c, answer2d);
-            
-            String a3 = splitted[15];
-            String b3 = splitted[16];
-            String answer3a = splitted[17];
-            String answer3b = splitted[18];
-            String answer3c = splitted[19];
-            String answer3d = splitted[20];
-            ClientRun.gameView.setQuestion3(a3, b3, answer3a, answer3b, answer3c, answer3d);
-            
-            String a4 = splitted[21];
-            String b4 = splitted[22];
-            String answer4a = splitted[23];
-            String answer4b = splitted[24];
-            String answer4c = splitted[25];
-            String answer4d = splitted[26];
-            ClientRun.gameView.setQuestion4(a4, b4, answer4a, answer4b, answer4c, answer4d);
-            
-            ClientRun.gameView.setStartGame(30);
+            SwingUtilities.invokeLater(() -> {
+                ClientRun.gameView.setRoomId(roomId);
+                ClientRun.gameView.setProductInfo(productName, imagePath);
+//                ClientRun.gameView.setStartGame(30, productName, imagePath);
+                ClientRun.gameView.setStartGame(30);
+            });
+        }
+    }
+    
+    private void onReceiveNextRound(String received) {
+        String[] splitted = received.split(";");
+        if (splitted[1].equals("success")) {
+            String roomId = splitted[2];
+            String productName = splitted[3];
+            String imagePath = splitted[4];
+            int currentRound = Integer.parseInt(splitted[5]);
+
+            System.out.println("currentRound: " + currentRound);
+            SwingUtilities.invokeLater(() -> {
+                ClientRun.gameView.setRoomId(roomId);
+                ClientRun.gameView.setProductInfo(productName, imagePath);
+                ClientRun.gameView.setRound(currentRound);
+                ClientRun.gameView.startNextRound(30); // 30 giây cho mỗi vòng
+            });
+        }
+    }
+    
+    private void onReceiveRoundResult(String received) {
+        String[] splitted = received.split(";");
+        if (splitted[1].equals("success")) {
+            String winner = splitted[2];
+            double actualPrice = Double.parseDouble(splitted[3]);
+            double guessClient1 = Double.parseDouble(splitted[4]);
+            double guessClient2 = Double.parseDouble(splitted[5]);
+            double roundScoreClient1 = Double.parseDouble(splitted[6]);
+            double roundScoreClient2 = Double.parseDouble(splitted[7]);
+            double totalScoreClient1 = Double.parseDouble(splitted[8]);
+            double totalScoreClient2 = Double.parseDouble(splitted[9]);
+            String nameClient1 = splitted[10];
+            String nameClient2 = splitted[11];
+
+            System.out.println("roundScoreClient1: " + roundScoreClient1);
+            System.out.println("roundScoreClient2: " + roundScoreClient2);
+            SwingUtilities.invokeLater(() -> {
+                ClientRun.gameView.showRoundResult(winner, actualPrice, guessClient1, guessClient2, 
+                                                   roundScoreClient1, roundScoreClient2, 
+                                                   totalScoreClient1, totalScoreClient2,
+                                                   nameClient1, nameClient2);
+            });
+        }
+    }
+
+    private void onReceiveGameOver(String received) {
+        String[] splitted = received.split(";");
+        if (splitted[1].equals("success")) {
+            String winner = splitted[2];
+            String nameClient1 = splitted[3];
+            String nameClient2 = splitted[4];
+            String roomId = splitted[5];
+            double scoreClient1 = Double.parseDouble(splitted[6]);
+            double scoreClient2 = Double.parseDouble(splitted[7]);
+            SwingUtilities.invokeLater(() -> {
+                ClientRun.gameView.showGameOver(winner, scoreClient1, scoreClient2, nameClient1, nameClient2);
+            });
         }
     }
     
@@ -568,16 +602,24 @@ public class SocketHandler {
         String user1 = splitted[3];
         String user2 = splitted[4];
         String roomId = splitted[5];
-        
+        double actualPrice = Double.parseDouble(splitted[6]);
+
         if (status.equals("success")) {
             ClientRun.gameView.setWaitingRoom();
+            String winner;
             if (result.equals("DRAW")) {
-                ClientRun.gameView.showAskPlayAgain("The game is draw. Do you want to play continue?");
+                winner = "Kết quả hòa.";
             } else if (result.equals(loginUser)) {
-                ClientRun.gameView.showAskPlayAgain("You win. Do you want to play continue?");
+                winner = "Bạn thắng!";
             } else {
-                ClientRun.gameView.showAskPlayAgain("You lose. Do you want to play continue?");
+                winner = "Bạn thua.";
             }
+            SwingUtilities.invokeLater(() -> {
+            ClientRun.gameView.showResultDialog(winner, actualPrice, score);
+            ClientRun.gameView.setWaitingRoom();
+            String message = "Bạn có muốn chơi tiếp không?";
+            ClientRun.gameView.showAskPlayAgain(message);
+        });
         }
     }
     
@@ -597,7 +639,6 @@ public class SocketHandler {
             }
         }
     }  
-    
     
     // get set
     public String getLoginUser() {
