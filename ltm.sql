@@ -7,8 +7,13 @@
  * Author: nddmanh
  * Created: Oct 18, 2021
  */
+<<<<<<< HEAD
 create database btlltm
 USE btlltm;
+=======
+create database bttlltm
+USE bttlltm;
+>>>>>>> af6d489e7cd5c354fef3c4d6519b224552051b49
 
 drop table users;
 
@@ -40,12 +45,17 @@ CREATE TABLE users (
     score FLOAT,
     win INT DEFAULT 0,
     draw INT DEFAULT 0,
+<<<<<<< HEAD
     lose INT DEFAULT 0,
+=======
+    loss INT DEFAULT 0,
+>>>>>>> af6d489e7cd5c354fef3c4d6519b224552051b49
     avgCompetitor FLOAT,
     avgTime FLOAT,
     totalMatches INT DEFAULT 0
 );
 
+<<<<<<< HEAD
 INSERT INTO users (userName, password, score, win, draw, lose, avgCompetitor, avgTime, totalMatches) 
 VALUES 
 ('ly', '12345', 0, 20, 8, 5, 160.0, 3.0, 33),
@@ -58,6 +68,17 @@ VALUES
 
 
 drop table products;
+=======
+INSERT INTO users (userName, password, score, win, draw, loss, avgCompetitor, avgTime, totalMatches) 
+VALUES 
+('ly', '12345', 200, 20, 8, 5, 160.0, 3.0, 33),
+('lyn', '12345', 100, 15, 10, 5, 140.0, 2.8, 30);
+
+
+
+
+drop table Product;
+>>>>>>> af6d489e7cd5c354fef3c4d6519b224552051b49
 
 -- CREATE TABLE Product (
 --     id VARCHAR(255) PRIMARY KEY,
@@ -72,7 +93,11 @@ drop table products;
 -- INSERT INTO Product (id, name, price, image_url) VALUES ('SP004', 'Nike Air Max', 199.99, 'https://tse1.mm.bing.net/th?id=OIP.CB7MhAMNOPbtdZb7HPupIAHaFM&pid=Api&P=0&h=180');
 -- INSERT INTO Product (id, name, price, image_url) VALUES ('SP005', 'Adidas Ultra Boost', 179.99, 'https://tse1.mm.bing.net/th?id=OIP.3ZDijY9q1sVdK1FgX0pZiwHaFM&pid=Api&P=0&h=180');
 
+<<<<<<< HEAD
 CREATE TABLE product (
+=======
+CREATE TABLE products (
+>>>>>>> af6d489e7cd5c354fef3c4d6519b224552051b49
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -80,7 +105,11 @@ CREATE TABLE product (
     image_path VARCHAR(255)
 );
 
+<<<<<<< HEAD
 INSERT INTO product (name, description, price, image_path) VALUES
+=======
+INSERT INTO products (name, description, price, image_path) VALUES
+>>>>>>> af6d489e7cd5c354fef3c4d6519b224552051b49
 ('Laptop', 'Powerful laptop for work and gaming', 15000.00, 'laptop.jpg'),
 ('Smartphone', 'Latest model with advanced features', 7000.00, 'smartphone.jpg'),
 ('Headphones', 'Noise-cancelling wireless headphones', 3500.00, 'headphones.jpg'),
