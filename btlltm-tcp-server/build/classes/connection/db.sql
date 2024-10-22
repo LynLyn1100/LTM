@@ -19,3 +19,11 @@ CREATE TABLE `btlltm`.`users` (
   `avgCompetitor` FLOAT NOT NULL,
   `avgTime` FLOAT NOT NULL,
   PRIMARY KEY (`userId`));
+
+CREATE TABLE product (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    image_path VARCHAR(255)
+);

@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import run.ServerRun;
-import helper.Question;
 import java.sql.SQLException;
+import model.ProductModel;
 
 /**
  *
@@ -107,6 +107,9 @@ public class Client implements Runnable {
                         break;
                     case "START_GAME":
                         onReceiveStartGame(received);
+                        break;
+                    case "NEXT_ROUND":
+                        onReceiveNextRound(received);
                         break;
                     case "SUBMIT_RESULT":
                         onReceiveSubmitResult(received);
@@ -377,48 +380,72 @@ public class Client implements Runnable {
             
     private void onReceiveStartGame(String received) {
         String[] splitted = received.split(";");
+        System.out.println(received);
         String user1 = splitted[1];
         String user2 = splitted[2];
         String roomId = splitted[3];
+//        String roundGame = splitted[4];
         
-        String question1 = Question.renQuestion();
-        String question2 = Question.renQuestion();
-        String question3 = Question.renQuestion();
-        String question4 = Question.renQuestion();
+        // Lấy sản phẩm ngẫu nhiên từ ProductManager
+        ProductModel product = ServerRun.productManager.getRandomProduct();
         
-        String data = "START_GAME;success;" + roomId + ";" + question1 + question2 + question3 + question4;
-        // Send question here
-        joinedRoom.resetRoom();
-        joinedRoom.broadcast(data);
+        // Chuẩn bị thông tin sản phẩm để gửi cho người chơi
+        String productInfo = "START_GAME;success;" 
+                + roomId + ";" 
+                + product.getName() + ";" 
+                + product.getImagePath();
+//                + roundGame;
+        
+        // Gửi thông tin sản phẩm cho cả hai người chơi
+        joinedRoom.broadcast(productInfo);
+        
+        // Bắt đầu trò chơi
         joinedRoom.startGame();
-    } 
+    }
     
     private void onReceiveSubmitResult(String received) throws SQLException {
         String[] splitted = received.split(";");
-        String user1 = splitted[1];
-        String user2 = splitted[2];
+        String user = splitted[1];
+        String competitor = splitted[2];
         String roomId = splitted[3];
+        double priceGuess = Double.parseDouble(splitted[4]);
+//        int elapsedTime = Integer.parseInt(splitted[5]);
         
-        if (user1.equals(joinedRoom.getClient1().getLoginUser())) {
-            joinedRoom.setResultClient1(received);
-        } else if (user1.equals(joinedRoom.getClient2().getLoginUser())) {
-            joinedRoom.setResultClient2(received);
-        }
-        
-        while (!joinedRoom.getTime().equals("00:00") && joinedRoom.getTime() != null) {
-            System.out.println(joinedRoom.getTime());
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+         Room room = ServerRun.roomManager.find(roomId);
+        if (room != null) {
+            if (user.equals(room.getClient1().getLoginUser())) {
+                room.setPriceGuessClient1(priceGuess);
+            } else if (user.equals(room.getClient2().getLoginUser())) {
+                room.setPriceGuessClient2(priceGuess);
             }
-        } 
-        
-        String data = "RESULT_GAME;success;" + joinedRoom.handleResultClient() 
-                + ";" + joinedRoom.getClient1().getLoginUser() + ";" + joinedRoom.getClient2().getLoginUser() + ";" + joinedRoom.getId();
-        System.out.println(data);
-        joinedRoom.broadcast(data);
-    } 
+
+            // Kiểm tra xem cả hai người chơi đã đoán giá chưa
+//            if (room.getPriceGuessClient1() > 0 && room.getPriceGuessClient2() > 0) {
+//                String result = room.handleResultClient();
+//                String resultMessage = "RESULT_GAME;success;" + result + ";" 
+//                                     + room.getClient1().getLoginUser() + ";" 
+//                                     + room.getClient2().getLoginUser() + ";" 
+//                                     + roomId + ";" 
+//                                     + room.getCurrentProduct().getPrice();
+//                room.broadcast(resultMessage);
+//            }
+            if (room.getPriceGuessClient1() > 0 && room.getPriceGuessClient2() > 0) {
+                room.handleRoundEnd(); // Gọi phương thức xử lý kết thúc vòng
+            }
+        }
+    }
+    
+    private void onReceiveNextRound(String received) {
+        String[] splitted = received.split(";");
+        String roomId = splitted[2];
+        String productName = splitted[3];
+        String imagePath = splitted[4];
+        int round = Integer.parseInt(splitted[5]);
+
+        // Gửi thông tin vòng mới cho client
+        String msg = "NEXT_ROUND;success;" + roomId + ";" + productName + ";" + imagePath + ";" + round;
+        joinedRoom.broadcast(msg);
+    }
     
     private void onReceiveAskPlayAgain(String received) throws SQLException {
         String[] splitted = received.split(";");

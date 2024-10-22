@@ -43,11 +43,11 @@ public class HomeView extends javax.swing.JFrame {
     }
     
     public void setUsername(String username) {
-        infoUsername.setText("Hello: " + username);
+        infoUsername.setText("Xin chào: " + username);
     }
     
     public void setUserScore(float score) {
-        infoUserScore.setText("Score: " + score);
+        infoUserScore.setText("Điểm: " + score);
     }
 
     /**
@@ -91,7 +91,7 @@ public class HomeView extends javax.swing.JFrame {
         jLabel1.setText("User online");
 
         infoUsername.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        infoUsername.setText("Hello");
+        infoUsername.setText("Xin chào");
 
         tblUser.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {

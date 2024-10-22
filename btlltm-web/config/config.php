@@ -1,5 +1,5 @@
 <?php
-    $mysqli = new mysqli("localhost","root","systemadmin","btlltm");
+    $mysqli = new mysqli("localhost","root","Admin","btlltm");
 
     // Check connection
     if ($mysqli -> connect_errno) {
